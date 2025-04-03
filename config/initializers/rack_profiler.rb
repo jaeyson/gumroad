@@ -1,8 +1,25 @@
 # frozen_string_literal: true
 
-if ENV["RACK_MINI_PROFILER_ENABLED"] == "1"
-  require "rack-mini-profiler"
+require "rack-mini-profiler"
 
-  # initialization is skipped so trigger it
-  Rack::MiniProfilerRails.initialize!(Rails.application)
+Rack::MiniProfilerRails.initialize!(Rails.application)
+
+Rack::MiniProfiler.config.authorization_mode = :allow_authorized
+
+Rack::MiniProfiler.config.skip_paths = [
+  /#{ASSET_DOMAIN}/,
+]
+
+Rack::MiniProfiler.config.start_hidden = true
+
+Rack::MiniProfiler.config.storage_instance = Rack::MiniProfiler::RedisStore.new(
+  connection: $redis,
+  expires_in: 1.hour.in_seconds,
+)
+
+Rack::MiniProfiler.config.user_provider = ->(env) do
+  request = ActionDispatch::Request.new(env)
+  id = request.cookies['_gumroad_guid'] || request.remote_ip || "unknown"
+
+  Digest::SHA256.hexdigest(id.to_s)
 end
