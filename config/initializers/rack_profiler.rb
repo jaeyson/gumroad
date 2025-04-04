@@ -42,7 +42,10 @@ module Rack
 
       # inject header
       if headers.is_a? Hash
-        headers["X-MiniProfiler-Debug-1-Inject-Profiler"] = "yes"
+        headers["X-MiniProfiler-Debug-1-Inject-Profiler"] = {
+          inject_js: current.inject_js,
+          content_type: content_type,
+      }.to_json
         headers["X-MiniProfiler-Ids"] = ids_comma_separated(env)
         headers["X-MiniProfiler-Flamegraph-Path"] = flamegraph_path(env) if current.page_struct[:has_flamegraph]
       end
