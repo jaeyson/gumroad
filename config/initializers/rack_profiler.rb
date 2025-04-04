@@ -45,12 +45,13 @@ module Rack
         headers["X-MiniProfiler-Debug-1-Inject-Profiler"] = {
           inject_js: current.inject_js,
           content_type: content_type,
-      }.to_json
+          headers: headers,
+        }.to_json
         headers["X-MiniProfiler-Ids"] = ids_comma_separated(env)
         headers["X-MiniProfiler-Flamegraph-Path"] = flamegraph_path(env) if current.page_struct[:has_flamegraph]
       end
 
-      if current.inject_js && content_type.include?("text/html")
+      if !current.inject_js && content_type.include?("text/html")
         response = Rack::Response.new([], status, headers)
         script   = self.get_profile_script(env, headers)
         response.add_header("X-MiniProfiler-Debug-2-Trying-To-Inject-JS", "yes")
@@ -64,7 +65,20 @@ module Rack
         body.close if body.respond_to? :close
         response.finish
       else
-        nil
+        response = Rack::Response.new([], status, headers)
+        if String === body
+          s = body.to_s
+          response.write s
+          response.add_header("X-MiniProfiler-Debug-4-content", s[0, 100])
+        else
+          body.each.with_index do |fragment, index|
+            s = fragment.to_s
+            response.add_header("X-MiniProfiler-Debug-4-content-#{index}", s[0, 100])
+            response.write s
+          end
+        end
+        body.close if body.respond_to? :close
+        response.finish
       end
     end
 
