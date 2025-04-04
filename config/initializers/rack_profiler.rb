@@ -30,7 +30,7 @@ module Rack
     def inject_profiler(env, status, headers, body)
       # mini profiler is meddling with stuff, we can not cache cause we will get incorrect data
       # Rack::ETag has already inserted some nonesense in the chain
-      content_type = headers["Content-Type"]
+      content_type = headers["Content-Type"] || headers["content-type"]
 
       if config.disable_caching
         headers.delete("ETag")
@@ -46,6 +46,7 @@ module Rack
           inject_js: current.inject_js,
           content_type: content_type,
           headers: headers,
+          headers_class: headers.class,
         }.to_json
         headers["X-MiniProfiler-Ids"] = ids_comma_separated(env)
         headers["X-MiniProfiler-Flamegraph-Path"] = flamegraph_path(env) if current.page_struct[:has_flamegraph]
