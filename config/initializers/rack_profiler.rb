@@ -5,6 +5,7 @@ require "rack-mini-profiler"
 Rack::MiniProfilerRails.initialize!(Rails.application)
 
 Rack::MiniProfiler.config.authorization_mode = :allow_authorized
+Rack::MiniProfiler.config.enable_advanced_debugging_tools = true
 
 Rack::MiniProfiler.config.skip_paths = [
   /#{ASSET_DOMAIN}/,
